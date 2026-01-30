@@ -15,6 +15,6 @@
 - See build.gradle.kts
 
 ### Personal notes
-While working on this project, I got a bit carried away and implemented some unnecessary bonus features. Mostly because I have never used Kotlin before.
-I was learning the language on the fly while juggling Kotlin docs and homework while also really enjoying the no reload entire page - SPA :trollface:
+While working on this project, I got a bit carried away and implemented some unnecessary bonus features. Mostly because I have never used Kotlin before.  
+I was learning the language on the fly while juggling Kotlin docs and homework while also really enjoying the no reload entire page - SPA :trollface:  
 Because of this experience I can definitely say that Kotlin > java 🤩
