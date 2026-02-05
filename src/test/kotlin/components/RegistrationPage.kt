@@ -21,12 +21,6 @@ class RegistrationPage(private val driver: WebDriver) {
     private val submitButton: By = By.cssSelector("button[type='submit'][data-link-action='save-customer']")
     private val accountInfo: By = By.cssSelector(".user-info .account")
 
-    companion object {
-        fun onRegistrationPage(driver: WebDriver): RegistrationPage {
-            return RegistrationPage(driver)
-        }
-    }
-
     // Method to perform registration
     fun register() {
         val loadWait = WebDriverWait(driver, Duration.ofSeconds(20))

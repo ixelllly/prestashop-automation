@@ -26,12 +26,6 @@ class AccessoriesPage(private val driver: WebDriver) {
     private val productLocator: By = By.cssSelector(".product-miniature") // Product
     private val productLink: By = By.cssSelector("a.thumbnail.product-thumbnail") // Product thumbnail
 
-    companion object {
-        fun onAccessoriesPage(driver: WebDriver): AccessoriesPage {
-            return AccessoriesPage(driver)
-        }
-    }
-
     // Runs the full sequence
     fun accessoriesFilterVerifyChooseRandomProduct() {
         println("Home accessories page")

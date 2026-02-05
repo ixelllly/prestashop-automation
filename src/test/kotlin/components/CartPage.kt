@@ -13,12 +13,6 @@ class CartPage(private val driver: WebDriver) {
     private val cartTotalElement: By = By.cssSelector(".cart-total .value")  // Grand total (tax incl.)
     private val proceedToCheckoutButton: By = By.cssSelector(".checkout a.btn.btn-primary") // Proceed checkout
 
-    companion object {
-        fun onCartPage(driver: WebDriver): CartPage {
-            return CartPage(driver)
-        }
-    }
-
     // Runs the full sequence
     fun cartAmountVerification(subtotal1: Double, subtotal2: Double): Double {
         println("Cart page")

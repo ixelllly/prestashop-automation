@@ -20,12 +20,6 @@ class ProductPage(private val driver: WebDriver) {
     private val continueShoping: By = By.cssSelector("button[type='button'][class='btn btn-secondary']")
     private val proceedToCheckout: By = By.cssSelector(".cart-content-btn a.btn.btn-primary")
 
-    companion object {
-        fun onProductPage(driver: WebDriver): ProductPage {
-            return ProductPage(driver)
-        }
-    }
-
     // Runs the full sequence
     fun addVerifyProductToCart(): Pair<Double, Int> {
         println("Product page")

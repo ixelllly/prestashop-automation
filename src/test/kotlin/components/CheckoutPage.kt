@@ -39,13 +39,6 @@ class CheckoutPage(private val driver: WebDriver) {
     private val shippingButtonIndex = System.getProperty("shipping.method", "1").toInt() //Shipping method index 0-1
     private val paymentButtonIndex = System.getProperty("payment.method", "1").toInt() // Payment method index 0-2
 
-
-    companion object {
-        fun onCheckoutPage(driver: WebDriver): CheckoutPage {
-            return CheckoutPage(driver)
-        }
-    }
-
     // Runs the full sequence
     fun checkoutFormFill(expectedTotal: Double): Pair<String, String> {
         println("Checkout page")

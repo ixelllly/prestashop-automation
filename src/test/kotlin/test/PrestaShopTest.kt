@@ -25,14 +25,14 @@ class PrestaShopTest {
     @Test
     fun testPrestaShopScenario() {
         // User registration
-        RegistrationPage.onRegistrationPage(driver).register()
+        RegistrationPage(driver).register()
 
         // Open Accessories section, filter by price, verify prices, choose random product
-        val accessoriesPage = AccessoriesPage.onAccessoriesPage(driver)
+        val accessoriesPage = AccessoriesPage(driver)
         accessoriesPage.accessoriesFilterVerifyChooseRandomProduct()
 
         // Add product quantity set in.env to cart and continue shopping, get subtotal
-        val productPage = ProductPage.onProductPage(driver)
+        val productPage = ProductPage(driver)
         val (subtotal1,normalisedQuantity) = productPage.addVerifyProductToCart()
 
         // Re filter and choose another random product
@@ -44,18 +44,18 @@ class PrestaShopTest {
         productPage.proceedToCheckoutMoral()
 
         // Calculate and verify grand total in cart page
-        val cartPage = CartPage.onCartPage(driver)
+        val cartPage = CartPage(driver)
         val expectedTotal = cartPage.cartAmountVerification(subtotal1, subtotal2)
 
         //  Fill out the form and confirm order
-        val checkoutPage = CheckoutPage.onCheckoutPage(driver)
+        val checkoutPage = CheckoutPage(driver)
         val (selectedShippingMethod, selectedPaymentMethod) = checkoutPage.checkoutFormFill(expectedTotal)
 
         // Check order details on confirmation page
-        val confirmationPage = OrderConfirmationPage.onOrderConfirmationPage(driver)
+        val confirmationPage = OrderConfirmationPage(driver)
         confirmationPage.confirmationPage(selectedShippingMethod, selectedPaymentMethod)
 
         // Logout
-        Logout.onLogout(driver).logout()
+        Logout(driver).logout()
     }
 }

@@ -12,12 +12,6 @@ class OrderConfirmationPage(private val driver: WebDriver) {
     private val orderPaymentElement: By = By.cssSelector("#order-details li:nth-of-type(2)") // Payment method
     private val orderShippingElement: By = By.cssSelector("#order-details li:nth-of-type(3)") // Shipping method
 
-    companion object {
-        fun onOrderConfirmationPage(driver: WebDriver): OrderConfirmationPage {
-            return OrderConfirmationPage(driver)
-        }
-    }
-
     // Runs the full sequence
     fun confirmationPage(expectedShippingMethod: String, expectedPaymentMethod: String) {
         println("Confirmation page")
