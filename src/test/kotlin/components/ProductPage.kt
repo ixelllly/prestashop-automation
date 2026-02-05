@@ -27,21 +27,20 @@ class ProductPage(private val driver: WebDriver) {
     }
 
     // Runs the full sequence
-    fun addVerifyProductToCart(quantity: Int = 3): Double {
+    fun addVerifyProductToCart(): Pair<Double, Int> {
         println("Product page")
-        addProductToCart(quantity)
-        val subtotal = productPriceCalculation(quantity)
+        val normalizedQuantity = normalizeQuantity()
+        addProductToCart(normalizedQuantity)
+        val subtotal = productPriceCalculation(normalizedQuantity)
         continueShoppingMoral()
-        return subtotal
+        return Pair (subtotal, normalizedQuantity)
     }
 
-    fun addProductToCart(quantity: Int = 3) {
+    fun addProductToCart(normalizedQuantity: Int = 3) {
         WebDriverWait(driver, Duration.ofSeconds(10)).until(ExpectedConditions.visibilityOfElementLocated(currentPrice))
         // Increase quantity (click + button 'quantity-1' times as default value starts at 1)
-        if (quantity > 1) {
-            repeat(quantity - 1) {
-                driver.findElement(quantityUp).click()
-            }
+        repeat(normalizedQuantity - 1) {
+            driver.findElement(quantityUp).click()
         }
 
         // Add to cart
@@ -49,7 +48,7 @@ class ProductPage(private val driver: WebDriver) {
         WebDriverWait(driver, Duration.ofSeconds(10)).until(ExpectedConditions.visibilityOfElementLocated(cartContent))
     }
 
-    fun productPriceCalculation(quantity: Int = 3, previousTotal: Double = 0.0): Double {
+    fun productPriceCalculation(normalizedQuantity: Int = 3, previousTotal: Double = 0.0): Double {
         // Get unit price
         val unitPriceText = driver.findElement(currentPriceValue).text
             .replace("€", "")
@@ -63,7 +62,7 @@ class ProductPage(private val driver: WebDriver) {
             .toDoubleOrNull() ?: throw AssertionError("Could not read cart item subtotal")
 
         // Check if price is correctly calculated
-        val itemSubtotal = unitPriceText * quantity
+        val itemSubtotal = unitPriceText * normalizedQuantity
         val expectedTotal = itemSubtotal + previousTotal
         val delta = 0.01
         assert(Math.abs(displayedTotalText - expectedTotal).absoluteValue <= delta) {
@@ -105,5 +104,15 @@ class ProductPage(private val driver: WebDriver) {
             driver,
             Duration.ofSeconds(10)
         ).until(ExpectedConditions.invisibilityOfElementLocated(cartContent))
+    }
+
+    private fun normalizeQuantity(): Int {
+        val quantity = System.getProperty("expected.product.quantity", "3").toInt()
+        return if (quantity < 1) {
+            println("Quantity is invalid $quantity. Defaulting to 1")
+            1
+        } else {
+            quantity
+        }
     }
 }

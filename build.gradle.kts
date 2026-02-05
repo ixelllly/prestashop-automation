@@ -26,7 +26,7 @@ tasks.test {
     systemProperty("target.min.price", "18") // Filter min range
     systemProperty("target.max.price", "23") // Filter max range
     systemProperty("expected.product.count", "3") // Change only when product count after filtration is known
-    systemProperty("expected.product.quantity", "4") // Whatever value your heart desires
+    systemProperty("expected.product.quantity", "-1") // Whatever value your heart desires
     systemProperty("shipping.method", "1") // 0-1 value choices - 'Click and collect' = 0, 'My carrier' = 1
     systemProperty("payment.method", "1") // 0-2 value choices - 'Pay by Cash on Delivery' = 0, 'Payment by Check' = 1, 'Pay by bank wire' = 2
     testLogging {

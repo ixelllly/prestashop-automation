@@ -31,18 +31,16 @@ class PrestaShopTest {
         val accessoriesPage = AccessoriesPage.onAccessoriesPage(driver)
         accessoriesPage.accessoriesFilterVerifyChooseRandomProduct()
 
-        val quantity = System.getProperty("expected.product.quantity", "4").toInt()
-
         // Add product quantity set in.env to cart and continue shopping, get subtotal
         val productPage = ProductPage.onProductPage(driver)
-        val subtotal1 = productPage.addVerifyProductToCart(quantity)
+        val (subtotal1,normalisedQuantity) = productPage.addVerifyProductToCart()
 
         // Re filter and choose another random product
         accessoriesPage.accessoriesFilterVerifyChooseRandomProduct()
 
         // Add one more item to cart, verify accumulative total in modal, then proceed to cart
-        productPage.addProductToCart(quantity)
-        val subtotal2 = productPage.productPriceCalculation(quantity, subtotal1)
+        productPage.addProductToCart(normalisedQuantity)
+        val subtotal2 = productPage.productPriceCalculation(normalisedQuantity, subtotal1)
         productPage.proceedToCheckoutMoral()
 
         // Calculate and verify grand total in cart page
@@ -56,6 +54,7 @@ class PrestaShopTest {
         // Check order details on confirmation page
         val confirmationPage = OrderConfirmationPage.onOrderConfirmationPage(driver)
         confirmationPage.confirmationPage(selectedShippingMethod, selectedPaymentMethod)
+
         // Logout
         Logout.onLogout(driver).logout()
     }
