@@ -2,12 +2,12 @@ package components
 
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.support.ui.ExpectedConditions
-import org.openqa.selenium.support.ui.WebDriverWait
-import java.time.Duration
 import kotlin.math.absoluteValue
+import Config.*
 
-class CartPage(private val driver: WebDriver) {
+class CartPage(driver: WebDriver) {
+    private val config = Config(driver)
+
     // Cart summary page
     private val cartPageLocator: By = By.cssSelector(".cart-overview")  // Element to confirm cart page loaded
     private val cartTotalElement: By = By.cssSelector(".cart-total .value")  // Grand total (tax incl.)
@@ -23,15 +23,12 @@ class CartPage(private val driver: WebDriver) {
 
     private fun verifyTotalValue(subtotal1: Double, subtotal2: Double): Double {
         // Wait for cart page to load
-        WebDriverWait(driver, Duration.ofSeconds(10)).until(
-            ExpectedConditions.visibilityOfElementLocated(
-                cartPageLocator
-            )
-        )
+        config.untilVisibilityOfElementLocated(cartPageLocator)
+
         val expectedTotal = subtotal1 + subtotal2
 
         // Get displayed grand total
-        val cartTotalValue = driver.findElement(cartTotalElement).text
+        val cartTotalValue = config.findElementAndReturnString(cartTotalElement)
             .replace("€", "")
             .trim()
             .toDoubleOrNull() ?: throw AssertionError("Could not read cart grand total")
@@ -46,11 +43,6 @@ class CartPage(private val driver: WebDriver) {
     }
 
     private fun proceedToCheckout() {
-        WebDriverWait(driver, Duration.ofSeconds(10)).until(
-            ExpectedConditions.elementToBeClickable(
-                proceedToCheckoutButton
-            )
-        )
-        driver.findElement(proceedToCheckoutButton).click()
+        config.untilElementToBeClickableAndClicks(proceedToCheckoutButton)
     }
 }

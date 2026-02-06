@@ -2,12 +2,13 @@ package components
 
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.support.ui.ExpectedConditions
-import org.openqa.selenium.support.ui.WebDriverWait
-import java.time.Duration
 import kotlin.math.absoluteValue
+import Config.*
 
-class ProductPage(private val driver: WebDriver) {
+class ProductPage(driver: WebDriver) {
+    private val config = Config(driver)
+    private val quantity = System.getProperty("expected.product.quantity", "3").toInt()
+
     // Price of product
     private val currentPrice: By = By.cssSelector(".current-price-value")
 
@@ -27,30 +28,30 @@ class ProductPage(private val driver: WebDriver) {
         addProductToCart(normalizedQuantity)
         val subtotal = productPriceCalculation(normalizedQuantity)
         continueShoppingMoral()
-        return Pair (subtotal, normalizedQuantity)
+        return Pair(subtotal, normalizedQuantity)
     }
 
     fun addProductToCart(normalizedQuantity: Int = 3) {
-        WebDriverWait(driver, Duration.ofSeconds(10)).until(ExpectedConditions.visibilityOfElementLocated(currentPrice))
+        config.untilVisibilityOfElementLocated(currentPrice)
         // Increase quantity (click + button 'quantity-1' times as default value starts at 1)
         repeat(normalizedQuantity - 1) {
-            driver.findElement(quantityUp).click()
+            config.findElementAndClick(quantityUp)
         }
 
         // Add to cart
-        driver.findElement(buttonAddToCart).click()
-        WebDriverWait(driver, Duration.ofSeconds(10)).until(ExpectedConditions.visibilityOfElementLocated(cartContent))
+        config.findElementAndClick(buttonAddToCart)
+        config.untilVisibilityOfElementLocated(cartContent)
     }
 
     fun productPriceCalculation(normalizedQuantity: Int = 3, previousTotal: Double = 0.0): Double {
         // Get unit price
-        val unitPriceText = driver.findElement(currentPriceValue).text
+        val unitPriceText = config.findElementAndReturnString(currentPriceValue)
             .replace("€", "")
             .trim()
             .toDoubleOrNull() ?: throw AssertionError("Invalid units price")
 
         // Get total unit price
-        val displayedTotalText = driver.findElement(productTotalValue).text
+        val displayedTotalText = config.findElementAndReturnString(productTotalValue)
             .replace("€", "")
             .trim()
             .toDoubleOrNull() ?: throw AssertionError("Could not read cart item subtotal")
@@ -69,39 +70,25 @@ class ProductPage(private val driver: WebDriver) {
 
     private fun continueShoppingMoral() {
         try {
-            WebDriverWait(
-                driver,
-                Duration.ofSeconds(10)
-            ).until(ExpectedConditions.elementToBeClickable(continueShoping))
-            driver.findElement(continueShoping).click()
+            config.untilElementToBeClickable(continueShoping)
+            config.findElementAndClick(continueShoping)
         } catch (e: Exception) {
             // modal already closed or not present
         }
-        WebDriverWait(
-            driver,
-            Duration.ofSeconds(10)
-        ).until(ExpectedConditions.invisibilityOfElementLocated(cartContent))
+        config.untilInvisibilityOfElementLocated(cartContent)
     }
 
     fun proceedToCheckoutMoral() {
         try {
-            WebDriverWait(driver, Duration.ofSeconds(10)).until(
-                ExpectedConditions.elementToBeClickable(
-                    proceedToCheckout
-                )
-            )
-            driver.findElement(proceedToCheckout).click()
+            config.untilElementToBeClickable(proceedToCheckout)
+            config.findElementAndClick(proceedToCheckout)
         } catch (e: Exception) {
             // modal already closed or not present
         }
-        WebDriverWait(
-            driver,
-            Duration.ofSeconds(10)
-        ).until(ExpectedConditions.invisibilityOfElementLocated(cartContent))
+        config.untilInvisibilityOfElementLocated(cartContent)
     }
 
     private fun normalizeQuantity(): Int {
-        val quantity = System.getProperty("expected.product.quantity", "3").toInt()
         return if (quantity < 1) {
             println("Quantity is invalid $quantity. Defaulting to 1")
             1

@@ -2,13 +2,12 @@ package components
 
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.support.ui.ExpectedConditions
-import org.openqa.selenium.support.ui.Select
-import org.openqa.selenium.support.ui.WebDriverWait
-import java.time.Duration
 import kotlin.math.absoluteValue
+import Config.*
 
-class CheckoutPage(private val driver: WebDriver) {
+class CheckoutPage(driver: WebDriver) {
+    private val config = Config(driver)
+
     // Address form (step 1: Addresses)
     private val addressForm: By = By.id("field-address1")  // Confirm addresses section
     private val cityForm: By = By.id("field-city")  // Confirm city section
@@ -21,6 +20,8 @@ class CheckoutPage(private val driver: WebDriver) {
     private val shippingMethods: By =
         By.cssSelector(".delivery-options .custom-radio input[type='radio']")  // Radio buttons for shipping methods
     private val continueToPayment: By = By.name("confirmDeliveryOption")  // Delivery confirmation
+    private val shippingExtraContent: By = By.cssSelector(".row.carrier-extra-content.js-carrier-extra-content")
+
 
     // Payment (step 3: Payment)
     private val paymentByCheck: By =
@@ -52,25 +53,19 @@ class CheckoutPage(private val driver: WebDriver) {
 
     // Fill out the address form
     private fun fillAddressForm() {
-        WebDriverWait(driver, Duration.ofSeconds(10)).until(ExpectedConditions.visibilityOfElementLocated(addressForm))
-        driver.findElement(addressForm).sendKeys("Test Address")
-        driver.findElement(cityForm).sendKeys("Paris")
-        Select(driver.findElement(countryForm)).selectByVisibleText("France")
-        WebDriverWait(
-            driver,
-            Duration.ofSeconds(10)
-        ).until(ExpectedConditions.visibilityOfElementLocated(vatNumberForm))
-        driver.findElement(postCodeForm).sendKeys("75001")
-        driver.findElement(continueToShipping).click()
+        config.untilVisibilityOfElementLocated(addressForm)
+        config.findElementAndSendKeys(addressForm, "Test address")
+        config.findElementAndSendKeys(cityForm, "Paris")
+        config.findElementAndSelectByVisibleText(countryForm, "France")
+        config.untilVisibilityOfElementLocated(vatNumberForm)
+        config.findElementAndSendKeys(postCodeForm, "75001")
+        config.findElementAndClick(continueToShipping)
     }
 
     // Choose a shipping method
     private fun chooseShippingMethod(): String {
-        WebDriverWait(
-            driver,
-            Duration.ofSeconds(10)
-        ).until(ExpectedConditions.presenceOfElementLocated(shippingMethods))
-        val radios = driver.findElements(shippingMethods)
+        config.untilPresenceOfElementLocated(shippingMethods)
+        val radios = config.findElements(shippingMethods)
         if (radios.isNotEmpty()) {
             println("Found ${radios.size} shipping options")
         }
@@ -84,26 +79,22 @@ class CheckoutPage(private val driver: WebDriver) {
         } else {
             println("Clicking 'My carrier' (second radio button)")
             radios[1].click()
-            WebDriverWait(driver, Duration.ofSeconds(10)).until {
-                driver.findElement(By.cssSelector(".row.carrier-extra-content.js-carrier-extra-content"))
-                    .getCssValue("display") == "none"
-            }
+            config.untilInvisibilityOfElementLocated(shippingExtraContent)
         }
-        val selectedRadio = radios.first { it.isSelected } ?: throw AssertionError("No shipping method selected")
-        val shippingId = selectedRadio.getAttribute("id") ?: throw AssertionError("Selected radio has no ID")
-        val selectedShippingName =
-            driver.findElement(By.cssSelector("label[for='$shippingId'] span.h6.carrier-name")).text.trim()
+
+        val selectedRadio = radios.first { it.isSelected }
+        val selectedShippingName = config.getShippingNameForRadio(selectedRadio)
         println("Selected shipping method: $selectedShippingName")
 
-        driver.findElement(continueToPayment).click()
+        config.findElementAndClick(continueToPayment)
 
         return selectedShippingName
     }
 
     private fun choosePaymentOption(): String {
-        WebDriverWait(driver, Duration.ofSeconds(10)).until(ExpectedConditions.presenceOfElementLocated(paymentByCheck))
+        config.untilPresenceOfElementLocated(paymentByCheck)
 
-        val radios = driver.findElements(paymentByCheck)
+        val radios = config.findElements(paymentByCheck)
         if (radios.isNotEmpty()) {
             println("Found ${radios.size} payment options")
         }
@@ -136,11 +127,9 @@ class CheckoutPage(private val driver: WebDriver) {
 
         radios[indexToClick].click()
 
-        val selectedRadio = radios.first { it.isSelected } ?: throw AssertionError("No payment method selected")
-        val purchaseId = selectedRadio.getAttribute("id") ?: throw AssertionError("Selected radio has no ID")
+        val selectedRadio = radios.first { it.isSelected }
         val selectedPaymentName =
-            driver.findElement(By.cssSelector("label[for='$purchaseId']")).text.trim().removePrefix("Pay by ")
-                .removeSuffix(" wire")
+            config.getPaymentNameForRadio(selectedRadio).removePrefix("Pay by ").removeSuffix(" wire")
         println("Selected payment method: $selectedPaymentName")
 
         return selectedPaymentName
@@ -148,27 +137,23 @@ class CheckoutPage(private val driver: WebDriver) {
 
     // Choose payment method - "Payment by Check", check total price
     private fun verifyTotal(expectedTotal: Double) {
-        WebDriverWait(driver, Duration.ofSeconds(10)).until(
-            ExpectedConditions.visibilityOfElementLocated(
-                cartTotalPaymentElement
-            )
-        )
+        config.untilVisibilityOfElementLocated(cartTotalPaymentElement)
 
         val totalPaymentValue = if (paymentButtonIndex == 1) {
-            driver.findElement(payByCheckTotalPaymentElement).text
+            config.findElementAndReturnString(payByCheckTotalPaymentElement)
                 .replace("€", "")
                 .replace("(tax incl.)", "")
                 .trim()
                 .toDoubleOrNull() ?: throw AssertionError("Could not read total payment - tax including ")
         } else {
-            driver.findElement(cartTotalPaymentElement).text
+            config.findElementAndReturnString(cartTotalPaymentElement)
                 .replace("€", "")
                 .replace("(tax incl.)", "")
                 .trim()
                 .toDoubleOrNull() ?: throw AssertionError("Could not read total payment - tax including ")
         }
 
-        val shippingCostValue = driver.findElement(shippingCostElement).text
+        val shippingCostValue = config.findElementAndReturnTrimmedString(shippingCostElement)
             .replace("€", "")
             .trim()
             .toDoubleOrNull() ?: 0.0
@@ -181,13 +166,12 @@ class CheckoutPage(private val driver: WebDriver) {
             "Payment total calculation failed! Expected: eur ${adjustedExpectedTotalValue}, but shows: eur ${totalPaymentValue}"
         }
         println("Payment with shipping eur $adjustedExpectedTotalValue matches eur $totalPaymentValue")
-        driver.findElement(termsCheckbox).click()
+
+        config.findElementAndClick(termsCheckbox)
     }
 
     // Confirm order
     private fun confirmOrder() {
-        WebDriverWait(driver, Duration.ofSeconds(10)).until(ExpectedConditions.elementToBeClickable(placeOrderButton))
-        driver.findElement(placeOrderButton).click()
+        config.untilElementToBeClickableAndClicks(placeOrderButton)
     }
-
 }

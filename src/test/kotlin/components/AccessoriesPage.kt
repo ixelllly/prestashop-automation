@@ -2,13 +2,12 @@ package components
 
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.interactions.Actions
-import org.openqa.selenium.support.ui.WebDriverWait
-import org.openqa.selenium.support.ui.ExpectedConditions
-import java.time.Duration
 import kotlin.random.Random
+import Config.*
 
-class AccessoriesPage(private val driver: WebDriver) {
+class AccessoriesPage(driver: WebDriver) {
+    private val config = Config(driver)
+
     // Dropdown of accessories and subcategory - home accessories
     private val accessories: By = By.cssSelector("#category-6 a.dropdown-item")
     private val homeAccessories: By = By.cssSelector("#subcategories li:nth-child(2)")
@@ -25,6 +24,7 @@ class AccessoriesPage(private val driver: WebDriver) {
     // Products
     private val productLocator: By = By.cssSelector(".product-miniature") // Product
     private val productLink: By = By.cssSelector("a.thumbnail.product-thumbnail") // Product thumbnail
+    private val productPrice: By = By.cssSelector(".product-price-and-shipping") // Product price
 
     // Runs the full sequence
     fun accessoriesFilterVerifyChooseRandomProduct() {
@@ -37,9 +37,8 @@ class AccessoriesPage(private val driver: WebDriver) {
 
     // Fetch min/max
     private fun getSliderMinMax(): Pair<Float, Float> {
-        WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.visibilityOfElementLocated(sliderMaxMin))
-
-        val sliderElement = driver.findElement(sliderMaxMin)
+        config.untilVisibilityOfElementLocated(sliderMaxMin)
+        val sliderElement = config.findElement(sliderMaxMin)
         val minStr = sliderElement.getAttribute("data-slider-min")
         val maxStr = sliderElement.getAttribute("data-slider-max")
 
@@ -51,13 +50,9 @@ class AccessoriesPage(private val driver: WebDriver) {
 
     // User navigates to home accessory section
     private fun goToAccessories() {
-        driver.findElement(accessories).click()
-        driver.findElement(homeAccessories).click()
-        WebDriverWait(driver, Duration.ofSeconds(10)).until(
-            ExpectedConditions.visibilityOfElementLocated(
-                sliderVisibility
-            )
-        )
+        config.findElementAndClick(accessories)
+        config.untilElementToBeClickableAndClicks(homeAccessories)
+        config.untilVisibilityOfElementLocated(sliderVisibility)
     }
 
     // Calculation and movement of sliders to apply filter
@@ -67,8 +62,8 @@ class AccessoriesPage(private val driver: WebDriver) {
         val targetMin = System.getProperty("target.min.price", "18").toFloat()
         val targetMax = System.getProperty("target.max.price", "23").toFloat()
 
-        val sliderBarLeft = driver.findElement(sliderLeft)
-        val sliderBarRight = driver.findElement(sliderRight)
+        val sliderBarLeft = config.findElement(sliderLeft)
+        val sliderBarRight = config.findElement(sliderRight)
         val sliderWidth = sliderBarRight.location.x - sliderBarLeft.location.x
 
         val percentageMin = (targetMin - minP) / (maxP - minP)
@@ -77,13 +72,11 @@ class AccessoriesPage(private val driver: WebDriver) {
         val minOffset = (sliderWidth * percentageMin).toInt()
         val maxOffset = (sliderWidth * percentageMax).toInt() - sliderWidth
 
-        Actions(driver).clickAndHold(sliderBarLeft).moveByOffset(minOffset, 0).release().perform()
+        config.moveSlider(sliderBarLeft, minOffset)
+        config.untilInvisibilityOfElementLocated(loading)
 
-        WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.invisibilityOfElementLocated(loading))
-        val sliderBarRightAfter = driver.findElement(sliderRight)
-
-        Actions(driver).clickAndHold(sliderBarRightAfter).moveByOffset(maxOffset, 0).release().perform()
-        WebDriverWait(driver, Duration.ofSeconds(5)).until(ExpectedConditions.invisibilityOfElementLocated(loading))
+        config.findAndMoveSlider(sliderRight, maxOffset)
+        config.untilInvisibilityOfElementLocated(loading)
     }
 
     // Verification of filtered products if they are in defined price range
@@ -94,13 +87,9 @@ class AccessoriesPage(private val driver: WebDriver) {
         val expectedCount = System.getProperty("expected.product.count", "3").toInt()
 
         // Wait for products (already in filterPrice()
-        WebDriverWait(
-            driver,
-            Duration.ofSeconds(10)
-        ).until(ExpectedConditions.numberOfElementsToBeMoreThan((productLocator), 0))
+        config.untilNumberOfElementsToBeMoreThan(productLocator, "0")
 
-        val product = driver.findElements((productLocator))
-
+        val product = config.findElements(productLocator)
         // Assert count (for sanity)
         assert(product.size == expectedCount) {
             "Expected $expectedCount in range [$targetMin, $targetMax], but found ${product.size}. Check filter or site changes."
@@ -109,8 +98,8 @@ class AccessoriesPage(private val driver: WebDriver) {
 
 
         // Check each of filtered product prices
-        product.forEach { productPrice ->
-            val priceText = productPrice.findElement(By.cssSelector(".product-price-and-shipping")).text
+        product.forEach { productPrices ->
+            val priceText = config.untilVisibilityOfNestedElementsLocated(productPrices, productPrice).text
                 .replace("€", "")
                 .trim()
                 .toFloatOrNull() ?: throw AssertionError("Invalid price format in product")
@@ -124,7 +113,7 @@ class AccessoriesPage(private val driver: WebDriver) {
 
     private fun chooseRandomProduct() {
         // Re fetch products (post filter)
-        val product = driver.findElements(productLocator)
+        val product = config.findElements(productLocator)
         if (product.isEmpty()) throw AssertionError("No products found post filter. Check earlier steps.")
 
         // Random product pick

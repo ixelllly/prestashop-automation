@@ -2,11 +2,13 @@ package components
 
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
-import org.openqa.selenium.support.ui.ExpectedConditions
-import org.openqa.selenium.support.ui.WebDriverWait
-import java.time.Duration
+import Config.*
 
-class RegistrationPage(private val driver: WebDriver) {
+class RegistrationPage(driver: WebDriver) {
+    private val config = Config(driver)
+    private val email = "test${System.currentTimeMillis()}@example.com"
+    private val password = "Test${System.currentTimeMillis()}123-"
+
     // Element defining as properties
     private val loaderLocator = By.id("loadingMessage")
     private val iframeLocator: By = By.id("framelive")
@@ -23,31 +25,27 @@ class RegistrationPage(private val driver: WebDriver) {
 
     // Method to perform registration
     fun register() {
-        val loadWait = WebDriverWait(driver, Duration.ofSeconds(20))
-
         // Navigate to registration
-        loadWait.until(ExpectedConditions.invisibilityOfElementLocated(loaderLocator))
-        loadWait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(iframeLocator))
-        loadWait.until(ExpectedConditions.visibilityOfElementLocated(loginLink))
-        driver.findElement(loginLink).click()
-        driver.findElement(noAccountLink).click()
+        config.untilInvisibilityOfElementLocated(loaderLocator)
+        config.untilFrameToBeAvailableAndSwitchToIt(iframeLocator)
+        config.untilVisibilityOfElementLocated(loginLink)
+        config.findElementAndClick(loginLink)
+        config.findElementAndClick(noAccountLink)
 
         // Check if key fields are displayed
-        if (!driver.findElement(emailField).isDisplayed || !driver.findElement(passwordField).isDisplayed) {
+        if (!config.findElement(emailField).isDisplayed || !config.findElement(passwordField).isDisplayed) {
             throw NoSuchElementException("Registration form sequence has changed")
         }
 
-        driver.findElement(firstNameField).sendKeys("Test")
-        driver.findElement(lastNameField).sendKeys("User")
-        val email = "test${System.currentTimeMillis()}@example.com"
-        driver.findElement(emailField).sendKeys(email)
-        val password = "Test${System.currentTimeMillis()}123-"
-        driver.findElement(passwordField).sendKeys(password)
-        driver.findElement(customerPrivacyCheckbox).click()
-        driver.findElement(psgdprCheckbox).click()
-        driver.findElement(submitButton).click()
+        config.findElementAndSendKeys(firstNameField, "Test")
+        config.findElementAndSendKeys(lastNameField, "User")
+        config.findElementAndSendKeys(emailField, email)
+        config.findElementAndSendKeys(passwordField, password)
+        config.findElementAndClick(customerPrivacyCheckbox)
+        config.findElementAndClick(psgdprCheckbox)
+        config.findElementAndClick(submitButton)
 
         // Wait and check if user is logged in after registration
-        loadWait.until(ExpectedConditions.visibilityOfElementLocated(accountInfo))
+        config.untilVisibilityOfElementLocated(accountInfo)
     }
 }
