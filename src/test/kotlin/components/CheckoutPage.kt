@@ -2,8 +2,8 @@ package components
 
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
-import kotlin.math.absoluteValue
 import Config.*
+import java.math.BigDecimal
 
 class CheckoutPage(driver: WebDriver) {
     private val config = Config(driver)
@@ -41,7 +41,7 @@ class CheckoutPage(driver: WebDriver) {
     private val paymentButtonIndex = System.getProperty("payment.method", "1").toInt() // Payment method index 0-2
 
     // Runs the full sequence
-    fun checkoutFormFill(expectedTotal: Double): Pair<String, String> {
+    fun checkoutFormFill(expectedTotal: BigDecimal): Pair<String, String> {
         println("Checkout page")
         fillAddressForm()
         val selectedShippingName = chooseShippingMethod()
@@ -136,7 +136,7 @@ class CheckoutPage(driver: WebDriver) {
     }
 
     // Choose payment method - "Payment by Check", check total price
-    private fun verifyTotal(expectedTotal: Double) {
+    private fun verifyTotal(expectedTotal: BigDecimal) {
         config.untilVisibilityOfElementLocated(cartTotalPaymentElement)
 
         val totalPaymentValue = if (paymentButtonIndex == 1) {
@@ -144,25 +144,24 @@ class CheckoutPage(driver: WebDriver) {
                 .replace("€", "")
                 .replace("(tax incl.)", "")
                 .trim()
-                .toDoubleOrNull() ?: throw AssertionError("Could not read total payment - tax including ")
+                .toBigDecimalOrNull() ?: throw AssertionError("Could not read total payment - tax including ")
         } else {
             config.findElementAndReturnString(cartTotalPaymentElement)
                 .replace("€", "")
                 .replace("(tax incl.)", "")
                 .trim()
-                .toDoubleOrNull() ?: throw AssertionError("Could not read total payment - tax including ")
+                .toBigDecimalOrNull() ?: throw AssertionError("Could not read total payment - tax including ")
         }
 
         val shippingCostValue = config.findElementAndReturnTrimmedString(shippingCostElement)
             .replace("€", "")
             .trim()
-            .toDoubleOrNull() ?: 0.0
+            .toBigDecimalOrNull() ?: BigDecimal.ZERO
 
-        val adjustedExpectedTotalValue = expectedTotal + shippingCostValue
+        val adjustedExpectedTotalValue = expectedTotal.add(shippingCostValue)
 
         // Assertion of total payment value to payment with shipping matches
-        val delta = 0.01
-        assert((totalPaymentValue - adjustedExpectedTotalValue).absoluteValue <= delta) {
+        assert((totalPaymentValue.compareTo(adjustedExpectedTotalValue)) == 0) {
             "Payment total calculation failed! Expected: eur ${adjustedExpectedTotalValue}, but shows: eur ${totalPaymentValue}"
         }
         println("Payment with shipping eur $adjustedExpectedTotalValue matches eur $totalPaymentValue")

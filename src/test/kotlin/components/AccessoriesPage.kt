@@ -82,8 +82,8 @@ class AccessoriesPage(driver: WebDriver) {
     // Verification of filtered products if they are in defined price range
     private fun verifyFilteredProducts() {
         // Fetch target price from .env
-        val targetMin = System.getProperty("target.min.price", "18").toFloat()
-        val targetMax = System.getProperty("target.max.price", "23").toFloat()
+        val targetMin = System.getProperty("target.min.price", "18").toBigDecimal()
+        val targetMax = System.getProperty("target.max.price", "23").toBigDecimal()
         val expectedCount = System.getProperty("expected.product.count", "3").toInt()
 
         // Wait for products (already in filterPrice()
@@ -102,12 +102,12 @@ class AccessoriesPage(driver: WebDriver) {
             val priceText = config.untilVisibilityOfNestedElementsLocated(productPrices, productPrice).text
                 .replace("€", "")
                 .trim()
-                .toFloatOrNull() ?: throw AssertionError("Invalid price format in product")
+                .toBigDecimalOrNull() ?: throw AssertionError("Invalid price format in product")
 
             assert(priceText in targetMin..targetMax) {
                 "Product price $priceText is outside range [$targetMin, $targetMax]. Verify product data or filter."
             }
-            println("eur $priceText is in the range eur $targetMin, eur$targetMax")
+            println("eur $priceText is in the range eur $targetMin, eur $targetMax")
         }
     }
 

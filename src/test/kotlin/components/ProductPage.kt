@@ -2,8 +2,8 @@ package components
 
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
-import kotlin.math.absoluteValue
 import Config.*
+import java.math.BigDecimal
 
 class ProductPage(driver: WebDriver) {
     private val config = Config(driver)
@@ -22,7 +22,7 @@ class ProductPage(driver: WebDriver) {
     private val proceedToCheckout: By = By.cssSelector(".cart-content-btn a.btn.btn-primary")
 
     // Runs the full sequence
-    fun addVerifyProductToCart(): Pair<Double, Int> {
+    fun addVerifyProductToCart(): Pair<BigDecimal, Int> {
         println("Product page")
         val normalizedQuantity = normalizeQuantity()
         addProductToCart(normalizedQuantity)
@@ -43,24 +43,23 @@ class ProductPage(driver: WebDriver) {
         config.untilVisibilityOfElementLocated(cartContent)
     }
 
-    fun productPriceCalculation(normalizedQuantity: Int = 3, previousTotal: Double = 0.0): Double {
+    fun productPriceCalculation(normalizedQuantity: Int = 3, previousTotal: BigDecimal = BigDecimal.ZERO): BigDecimal {
         // Get unit price
         val unitPriceText = config.findElementAndReturnString(currentPriceValue)
             .replace("€", "")
             .trim()
-            .toDoubleOrNull() ?: throw AssertionError("Invalid units price")
+            .toBigDecimalOrNull() ?: throw AssertionError("Invalid units price")
 
         // Get total unit price
         val displayedTotalText = config.findElementAndReturnString(productTotalValue)
             .replace("€", "")
             .trim()
-            .toDoubleOrNull() ?: throw AssertionError("Could not read cart item subtotal")
+            .toBigDecimalOrNull() ?: throw AssertionError("Could not read cart item subtotal")
 
         // Check if price is correctly calculated
-        val itemSubtotal = unitPriceText * normalizedQuantity
-        val expectedTotal = itemSubtotal + previousTotal
-        val delta = 0.01
-        assert(Math.abs(displayedTotalText - expectedTotal).absoluteValue <= delta) {
+        val itemSubtotal = unitPriceText.multiply(BigDecimal(normalizedQuantity))
+        val expectedTotal = itemSubtotal.add(previousTotal)
+        assert((displayedTotalText.compareTo(expectedTotal)) == 0) {
             "Price calculation failed! Expected: eur ${expectedTotal}, but cart shows: eur ${displayedTotalText}"
         }
         println("Total for products eur $expectedTotal correctly calculated")
