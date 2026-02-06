@@ -4,8 +4,14 @@ import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
 import kotlin.random.Random
 import Config.*
+import java.math.BigDecimal
 
-class AccessoriesPage(driver: WebDriver) {
+class AccessoriesPage(
+    driver: WebDriver,
+    private val targetMinPrice: BigDecimal,
+    private val targetMaxPrice: BigDecimal,
+    private val expectedProductCount: Int
+) {
     private val config = Config(driver)
 
     // Dropdown of accessories and subcategory - home accessories
@@ -59,15 +65,15 @@ class AccessoriesPage(driver: WebDriver) {
     private fun filterPrice() {
         // Fetch min/max + targets
         val (minP, maxP) = getSliderMinMax()
-        val targetMin = System.getProperty("target.min.price", "18").toFloat()
-        val targetMax = System.getProperty("target.max.price", "23").toFloat()
+        val targetMinFloat = targetMinPrice.toFloat()
+        val targetMaxFloat = targetMaxPrice.toFloat()
 
         val sliderBarLeft = config.findElement(sliderLeft)
         val sliderBarRight = config.findElement(sliderRight)
         val sliderWidth = sliderBarRight.location.x - sliderBarLeft.location.x
 
-        val percentageMin = (targetMin - minP) / (maxP - minP)
-        val percentageMax = (targetMax - minP) / (maxP - minP)
+        val percentageMin = (targetMinFloat - minP) / (maxP - minP)
+        val percentageMax = (targetMaxFloat - minP) / (maxP - minP)
 
         val minOffset = (sliderWidth * percentageMin).toInt()
         val maxOffset = (sliderWidth * percentageMax).toInt() - sliderWidth
@@ -81,20 +87,15 @@ class AccessoriesPage(driver: WebDriver) {
 
     // Verification of filtered products if they are in defined price range
     private fun verifyFilteredProducts() {
-        // Fetch target price from .env
-        val targetMin = System.getProperty("target.min.price", "18").toBigDecimal()
-        val targetMax = System.getProperty("target.max.price", "23").toBigDecimal()
-        val expectedCount = System.getProperty("expected.product.count", "3").toInt()
-
         // Wait for products (already in filterPrice()
         config.untilNumberOfElementsToBeMoreThan(productLocator, "0")
 
         val product = config.findElements(productLocator)
         // Assert count (for sanity)
-        assert(product.size == expectedCount) {
-            "Expected $expectedCount in range [$targetMin, $targetMax], but found ${product.size}. Check filter or site changes."
+        assert(product.size == expectedProductCount) {
+            "Expected $expectedProductCount in range [$targetMinPrice, $targetMaxPrice], but found ${product.size}. Check filter or site changes."
         }
-        println("Expected product count $expectedCount corresponds to found product count after filtering ${product.size}")
+        println("Expected product count $expectedProductCount corresponds to found product count after filtering ${product.size}")
 
 
         // Check each of filtered product prices
@@ -104,10 +105,10 @@ class AccessoriesPage(driver: WebDriver) {
                 .trim()
                 .toBigDecimalOrNull() ?: throw AssertionError("Invalid price format in product")
 
-            assert(priceText in targetMin..targetMax) {
-                "Product price $priceText is outside range [$targetMin, $targetMax]. Verify product data or filter."
+            assert(priceText in targetMinPrice..targetMaxPrice) {
+                "Product price $priceText is outside range [$targetMinPrice, $targetMaxPrice]. Verify product data or filter."
             }
-            println("eur $priceText is in the range eur $targetMin, eur $targetMax")
+            println("eur $priceText is in the range eur $targetMinPrice, eur $targetMaxPrice")
         }
     }
 

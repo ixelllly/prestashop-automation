@@ -5,9 +5,8 @@ import org.openqa.selenium.WebDriver
 import Config.*
 import java.math.BigDecimal
 
-class ProductPage(driver: WebDriver) {
+class ProductPage(driver: WebDriver, private val expectedProductQuantity: Int = 1) {
     private val config = Config(driver)
-    private val quantity = System.getProperty("expected.product.quantity", "3").toInt()
 
     // Price of product
     private val currentPrice: By = By.cssSelector(".current-price-value")
@@ -88,11 +87,11 @@ class ProductPage(driver: WebDriver) {
     }
 
     private fun normalizeQuantity(): Int {
-        return if (quantity < 1) {
-            println("Quantity is invalid $quantity. Defaulting to 1")
+        return if (expectedProductQuantity < 1) {
+            println("Quantity is invalid $expectedProductQuantity. Defaulting to 1")
             1
         } else {
-            quantity
+            expectedProductQuantity
         }
     }
 }

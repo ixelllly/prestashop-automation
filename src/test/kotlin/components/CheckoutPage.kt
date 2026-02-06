@@ -5,7 +5,7 @@ import org.openqa.selenium.WebDriver
 import Config.*
 import java.math.BigDecimal
 
-class CheckoutPage(driver: WebDriver) {
+class CheckoutPage(driver: WebDriver, private val shippingMethodIndex: Int, private val paymentMethodIndex: Int) {
     private val config = Config(driver)
 
     // Address form (step 1: Addresses)
@@ -35,10 +35,6 @@ class CheckoutPage(driver: WebDriver) {
 
     // Confirm order (step 4: Confirm)
     private val placeOrderButton: By = By.cssSelector("#payment-confirmation button")  // Place Order
-
-    // Shipping method if none then defaults to radio button 1 = 'My carrier'
-    private val shippingButtonIndex = System.getProperty("shipping.method", "1").toInt() //Shipping method index 0-1
-    private val paymentButtonIndex = System.getProperty("payment.method", "1").toInt() // Payment method index 0-2
 
     // Runs the full sequence
     fun checkoutFormFill(expectedTotal: BigDecimal): Pair<String, String> {
@@ -74,7 +70,7 @@ class CheckoutPage(driver: WebDriver) {
         }
 
         // Handles selection of shipping method
-        if (radios[shippingButtonIndex].isSelected) {
+        if (radios[shippingMethodIndex].isSelected) {
             println("Pick up in-store is already selected")
         } else {
             println("Clicking 'My carrier' (second radio button)")
@@ -103,7 +99,7 @@ class CheckoutPage(driver: WebDriver) {
         }
 
         // Handle selection of payment method
-        val indexToClick = when (paymentButtonIndex) {
+        val indexToClick = when (paymentMethodIndex) {
             0 -> {
                 println("Pay by Cash on Delivery selected")
                 0
@@ -120,7 +116,7 @@ class CheckoutPage(driver: WebDriver) {
             }
 
             else -> {
-                println("Invalid payment index $paymentButtonIndex; defaulting to 'Pay by Check' (index 1)")
+                println("Invalid payment index $paymentMethodIndex; defaulting to 'Pay by Check' (index 1)")
                 1
             }
         }
@@ -139,7 +135,7 @@ class CheckoutPage(driver: WebDriver) {
     private fun verifyTotal(expectedTotal: BigDecimal) {
         config.untilVisibilityOfElementLocated(cartTotalPaymentElement)
 
-        val totalPaymentValue = if (paymentButtonIndex == 1) {
+        val totalPaymentValue = if (paymentMethodIndex == 1) {
             config.findElementAndReturnString(payByCheckTotalPaymentElement)
                 .replace("€", "")
                 .replace("(tax incl.)", "")

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="PrestaShop Automation Suite">
+    <!--        Base url-->
+    <parameter name="baseUrl" value="https://demo.prestashop.com/"/>
+    <!--        Filter min range-->
+    <parameter name="targetMinPrice" value="18"/>
+    <!--        Filter max range-->
+    <parameter name="targetMaxPrice" value="23"/>
+    <!--        Change only when product count after filtration is known-->
+    <parameter name="expectedProductCount" value="3"/>
+    <!--        Whatever value your heart desires-->
+    <parameter name="expectedProductQuantity" value="-1"/>
+    <!--        0-1 value choices - 'Click and collect' = 0, 'My carrier' = 1-->
+    <parameter name="shippingMethodIndex" value="1"/>
+    <!--        0-2 value choices - 'Pay by Cash on Delivery' = 0, 'Payment by Check' = 1, 'Pay by bank wire' = 2-->
+    <parameter name="paymentMethodIndex" value="1"/>
+
+    <test name="PrestaShop Tests">
+        <classes>
+            <class name="test.PrestaShopTest"/>
+        </classes>
+    </test>
+</suite>

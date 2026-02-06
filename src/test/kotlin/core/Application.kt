@@ -7,11 +7,10 @@ import org.openqa.selenium.chrome.ChromeDriver
 class Application {
     private lateinit var driver: WebDriver
 
-    fun openBaseUrl() {
+    fun openBaseUrl(baseUrl: String) {
         WebDriverManager.chromedriver().setup()
         driver = ChromeDriver()
         driver.manage().window().maximize()
-        val baseUrl = System.getProperty("base.url", "https://demo.prestashop.com/")
         driver.get(baseUrl)
     }
 
